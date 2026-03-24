@@ -1,0 +1,111 @@
+PATH
+  remote: .
+  specs:
+    memory_map_cache (0.1.0)
+      activesupport (>= 6.0)
+      concurrent-ruby
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (8.1.2)
+      base64
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      json
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
+    base64 (0.3.0)
+    bigdecimal (4.0.1)
+    concurrent-ruby (1.3.6)
+    connection_pool (3.0.2)
+    csv (3.3.5)
+    dalli (5.0.2)
+      logger
+    drb (2.2.3)
+    erubi (1.13.1)
+    hanami-router (2.3.1)
+      csv (~> 3.3)
+      mustermann (~> 3.0)
+      mustermann-contrib (~> 3.0)
+      rack (>= 2.2.16)
+    hansi (0.2.1)
+    i18n (1.14.8)
+      concurrent-ruby (~> 1.0)
+    json (2.19.1)
+    litestack (0.4.3)
+      erubi
+      hanami-router
+      oj
+      rack
+      sqlite3
+      tilt
+    logger (1.7.0)
+    minitest (5.27.0)
+    msgpack (1.8.0)
+    mustermann (3.0.4)
+      ruby2_keywords (~> 0.0.1)
+    mustermann-contrib (3.0.4)
+      hansi (~> 0.2.0)
+      mustermann (= 3.0.4)
+    oj (3.16.16)
+      bigdecimal (>= 3.0)
+      ostruct (>= 0.2)
+    ostruct (0.6.3)
+    rack (3.2.5)
+    rake (13.3.1)
+    rake-compiler (1.3.1)
+      rake
+    redis (5.4.1)
+      redis-client (>= 0.22.0)
+    redis-client (0.27.0)
+      connection_pool
+    ruby2_keywords (0.0.5)
+    securerandom (0.4.1)
+    sqlite3 (2.9.2-aarch64-linux-gnu)
+    sqlite3 (2.9.2-aarch64-linux-musl)
+    sqlite3 (2.9.2-arm-linux-gnu)
+    sqlite3 (2.9.2-arm-linux-musl)
+    sqlite3 (2.9.2-arm64-darwin)
+    sqlite3 (2.9.2-x86-linux-gnu)
+    sqlite3 (2.9.2-x86-linux-musl)
+    sqlite3 (2.9.2-x86_64-darwin)
+    sqlite3 (2.9.2-x86_64-linux-gnu)
+    sqlite3 (2.9.2-x86_64-linux-musl)
+    tilt (2.7.0)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
+    uri (1.1.1)
+
+PLATFORMS
+  aarch64-linux-gnu
+  aarch64-linux-musl
+  arm-linux-gnu
+  arm-linux-musl
+  arm64-darwin
+  x86-linux-gnu
+  x86-linux-musl
+  x86_64-darwin
+  x86_64-linux-gnu
+  x86_64-linux-musl
+
+DEPENDENCIES
+  bundler (~> 2.0)
+  dalli (~> 5.0)
+  litestack
+  memory_map_cache!
+  minitest (~> 5.0)
+  msgpack (~> 1.8)
+  rake (~> 13.0)
+  rake-compiler
+  redis
+  sqlite3
+
+BUNDLED WITH
+   2.7.2
