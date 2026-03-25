@@ -81,7 +81,7 @@ module FailureRaisingBehavior
 
     assert_raise ActiveRecord::StatementTimeout do
       emulating_unavailability do |cache|
-        cache.fetch_multi(key, other_key) { |k| "unavailable" }
+        cache.fetch_multi(key, other_key) { |_k| "unavailable" }
       end
     end
   end
@@ -132,9 +132,7 @@ module FailureRaisingBehavior
 
   def test_clear_failure_returns_nil
     assert_raise ActiveRecord::StatementTimeout do
-      emulating_unavailability do |cache|
-        cache.clear
-      end
+      emulating_unavailability(&:clear)
     end
   end
 end

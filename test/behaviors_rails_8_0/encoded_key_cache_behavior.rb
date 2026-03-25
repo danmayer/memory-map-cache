@@ -6,7 +6,8 @@
 module EncodedKeyCacheBehavior
   Encoding.list.each do |encoding|
     define_method "test_#{encoding.name.underscore}_encoded_values" do
-      key = (+"foo_#{encoding.name.underscore}").force_encoding(encoding)
+      key = "foo_#{encoding.name.underscore}".force_encoding(encoding)
+
       assert @cache.write(key, "1", raw: true)
       assert_equal "1", @cache.read(key, raw: true)
       assert_equal "1", @cache.fetch(key, raw: true)
@@ -19,6 +20,7 @@ module EncodedKeyCacheBehavior
 
   def test_common_utf8_values
     key = (+"\xC3\xBCmlaut").force_encoding(Encoding::UTF_8)
+
     assert @cache.write(key, "1", raw: true)
     assert_equal "1", @cache.read(key, raw: true)
     assert_equal "1", @cache.fetch(key, raw: true)
@@ -30,6 +32,7 @@ module EncodedKeyCacheBehavior
 
   def test_retains_encoding
     key = (+"\xC3\xBCmlaut").force_encoding(Encoding::UTF_8)
+
     assert @cache.write(key, "1", raw: true)
     assert_equal Encoding::UTF_8, key.encoding
   end

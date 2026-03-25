@@ -21,6 +21,7 @@ module CacheStoreSerializerBehavior
       key = "key#{rand}"
 
       @cache.write(key, 123)
+
       assert_equal Integer, @cache.read(key)
     end
 
@@ -29,6 +30,7 @@ module CacheStoreSerializerBehavior
       key = "key#{rand}"
 
       @cache.write(key, 123)
+
       assert_equal 123, @cache.read(key)
 
       assert_raises ActiveSupport::MessagePack::UnserializableObjectError do
@@ -46,9 +48,10 @@ module CacheStoreSerializerBehavior
   end
 
   private
-    def with_format(format_version, &block)
-      ActiveSupport.deprecator.silence do
-        ActiveSupport::Cache.with(format_version: format_version, &block)
-      end
+
+  def with_format(format_version, &block)
+    ActiveSupport.deprecator.silence do
+      ActiveSupport::Cache.with(format_version: format_version, &block)
     end
+  end
 end

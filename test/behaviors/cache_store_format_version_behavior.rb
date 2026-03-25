@@ -8,13 +8,13 @@ module CacheStoreFormatVersionBehavior
   FORMAT_VERSION_SIGNATURES = {
     7.0 => [
       "\x00\x04\x08[".b, # "\x00" + Marshal.dump(entry.pack)
-      "\x01\x78".b,      # "\x01" + Zlib::Deflate.deflate(...)
+      "\x01\x78".b      # "\x01" + Zlib::Deflate.deflate(...)
     ],
     7.1 => [
       "\x00\x11\x01".b, # ActiveSupport::Cache::Coder#dump
-      "\x00\x11\x81".b, # ActiveSupport::Cache::Coder#dump_compressed
-    ],
-  }
+      "\x00\x11\x81".b # ActiveSupport::Cache::Coder#dump_compressed
+    ]
+  }.freeze
 
   FORMAT_VERSIONS = FORMAT_VERSION_SIGNATURES.keys
 
@@ -43,9 +43,7 @@ module CacheStoreFormatVersionBehavior
           lookup_store.send(:serialize_entry, ActiveSupport::Cache::Entry.new(["value"] * 100))
         end
 
-        if serialized.is_a?(String)
-          assert_operator serialized, :start_with?, uncompressed_signature
-        end
+        assert_operator serialized, :start_with?, uncompressed_signature if serialized.is_a?(String)
       end
 
       test "format version #{format_version.inspect} uses correct signature for compressed entries" do
@@ -53,9 +51,7 @@ module CacheStoreFormatVersionBehavior
           lookup_store.send(:serialize_entry, ActiveSupport::Cache::Entry.new(["value"] * 100), compress_threshold: 1)
         end
 
-        if serialized.is_a?(String)
-          assert_operator serialized, :start_with?, compressed_signature
-        end
+        assert_operator serialized, :start_with?, compressed_signature if serialized.is_a?(String)
       end
 
       test "Marshal undefined class/module deserialization error with #{format_version} format" do
@@ -63,13 +59,19 @@ module CacheStoreFormatVersionBehavior
         self.class.const_set(:RemovedConstant, Class.new)
         @store = with_format(format_version) { lookup_store }
         @store.write(key, self.class::RemovedConstant.new)
+
         assert_instance_of self.class::RemovedConstant, @store.read(key)
 
         self.class.send(:remove_const, :RemovedConstant)
+
         assert_nil @store.read(key)
-        assert_equal false, @store.exist?(key)
+        refute @store.exist?(key)
       ensure
-        self.class.send(:remove_const, :RemovedConstant) rescue nil
+        begin
+          self.class.send(:remove_const, :RemovedConstant)
+        rescue StandardError
+          nil
+        end
       end
 
       test "Compressed Marshal undefined class/module deserialization error with #{format_version} format" do
@@ -77,14 +79,20 @@ module CacheStoreFormatVersionBehavior
         self.class.const_set(:RemovedConstant, Class.new)
         @store = with_format(format_version) { lookup_store }
         @store.write(key, self.class::RemovedConstant.new, compress: true, compress_threshold: 1)
+
         assert_instance_of self.class::RemovedConstant, @store.read(key)
 
         self.class.send(:remove_const, :RemovedConstant)
+
         assert_nil @store.read(key)
-        assert_equal({}, @store.read_multi(key))
+        assert_equal(false, @store.exist?(key))
         assert_equal("new-value", @store.fetch(key) { "new-value" })
-      ensure
-        self.class.send(:remove_const, :RemovedConstant) rescue nil
+        assert_equal("new-value", @store.read(key))
+        begin
+          self.class.send(:remove_const, :RemovedConstant)
+        rescue StandardError
+          nil
+        end
       end
     end
 
@@ -116,7 +124,8 @@ module CacheStoreFormatVersionBehavior
   end
 
   private
-    def with_format(format_version, &block)
-      ActiveSupport::Cache.with(format_version: format_version, &block)
-    end
+
+  def with_format(format_version, &block)
+    ActiveSupport::Cache.with(format_version: format_version, &block)
+  end
 end

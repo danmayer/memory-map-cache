@@ -19,9 +19,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency "concurrent-ruby"
 
   spec.add_development_dependency "bundler", "~> 2.0"
+  spec.add_development_dependency "litestack"
+  spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rake-compiler"
-  spec.add_development_dependency "minitest", "~> 5.0"
-  # Standard benchmarks and db components since we test against litestack
-  spec.add_development_dependency "litestack"
+  spec.add_development_dependency "rubocop", ">= 1.50"
+  spec.add_development_dependency "rubocop-minitest"
+  spec.add_development_dependency "rubocop-performance"
+  spec.metadata['rubygems_mfa_required'] = 'true'
 end

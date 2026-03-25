@@ -21,6 +21,7 @@ module CacheStoreSerializerBehavior
       key = "key#{rand}"
 
       @cache.write(key, 123)
+
       assert_equal Integer, @cache.read(key)
     end
 
@@ -29,6 +30,7 @@ module CacheStoreSerializerBehavior
       key = "key#{rand}"
 
       @cache.write(key, 123)
+
       assert_equal 123, @cache.read(key)
 
       assert_raises ActiveSupport::MessagePack::UnserializableObjectError do

@@ -8,6 +8,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.fetch(key, version: 1) { value }
+
     assert_equal value, @cache.read(key, version: 1)
   end
 
@@ -15,6 +16,7 @@ module CacheStoreVersionBehavior
     key = SecureRandom.uuid
 
     @cache.fetch(key, version: 1) { SecureRandom.alphanumeric }
+
     assert_nil @cache.read(key, version: 2)
   end
 
@@ -23,6 +25,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.write(key, value, version: 1)
+
     assert_equal value, @cache.read(key, version: 1)
   end
 
@@ -31,6 +34,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.write(key, value, version: 1)
+
     assert_nil @cache.read(key, version: 2)
   end
 
@@ -38,6 +42,7 @@ module CacheStoreVersionBehavior
     key = SecureRandom.uuid
 
     @cache.write(key, SecureRandom.alphanumeric, version: 1)
+
     assert @cache.exist?(key, version: 1)
   end
 
@@ -45,6 +50,7 @@ module CacheStoreVersionBehavior
     key = SecureRandom.uuid
 
     @cache.write(key, SecureRandom.alphanumeric, version: 1)
+
     assert_not @cache.exist?(key, version: 2)
   end
 
@@ -57,6 +63,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.write(m1v1, value)
+
     assert_equal value, @cache.read(m1v1)
     assert_nil @cache.read(m1v2)
   end
@@ -69,9 +76,10 @@ module CacheStoreVersionBehavior
 
     value = SecureRandom.alphanumeric
 
-    @cache.write([ "something", m1v1 ], value)
-    assert_equal value, @cache.read([ "something", m1v1 ])
-    assert_nil @cache.read([ "something", m1v2 ])
+    @cache.write(["something", m1v1], value)
+
+    assert_equal value, @cache.read(["something", m1v1])
+    assert_nil @cache.read(["something", m1v2])
   end
 
   def test_fetching_with_model_supporting_cache_version
@@ -84,6 +92,7 @@ module CacheStoreVersionBehavior
     other_value = SecureRandom.alphanumeric
 
     @cache.fetch(m1v1) { value }
+
     assert_equal value, @cache.fetch(m1v1) { other_value }
     assert_equal other_value, @cache.fetch(m1v2) { other_value }
   end
@@ -97,6 +106,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.write(m1v1, value)
+
     assert @cache.exist?(m1v1)
     assert_not @cache.fetch(m1v2)
   end
@@ -108,8 +118,8 @@ module CacheStoreVersionBehavior
     m2v1 = ModelWithKeyAndVersion.new("#{model_name}/2", 1)
     m2v2 = ModelWithKeyAndVersion.new("#{model_name}/2", 2)
 
-    first_fetch_values  = @cache.fetch_multi(m1v1, m2v1) { |m| m.cache_key }
-    second_fetch_values = @cache.fetch_multi(m1v1, m2v2) { |m| m.cache_key + " 2nd" }
+    first_fetch_values  = @cache.fetch_multi(m1v1, m2v1, &:cache_key)
+    second_fetch_values = @cache.fetch_multi(m1v1, m2v2) { |m| "#{m.cache_key} 2nd" }
 
     assert_equal({ m1v1 => "#{model_name}/1", m2v1 => "#{model_name}/2" }, first_fetch_values)
     assert_equal({ m1v1 => "#{model_name}/1", m2v2 => "#{model_name}/2 2nd" }, second_fetch_values)
@@ -120,6 +130,7 @@ module CacheStoreVersionBehavior
     value = SecureRandom.alphanumeric
 
     @cache.write(key, value, version: 1)
+
     assert_equal value, @cache.read(key, version: "1")
   end
 end

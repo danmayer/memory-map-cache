@@ -16,7 +16,7 @@ module FailureSafetyBehavior
     @cache.write(key, value)
 
     emulating_unavailability do |cache|
-      val = cache.fetch(key) { "1" }
+      val = cache.fetch(key, "1")
 
       ##
       # Though the `write` part of fetch fails for the same reason
@@ -45,12 +45,13 @@ module FailureSafetyBehavior
     )
 
     emulating_unavailability do |cache|
-      assert_equal Hash.new, cache.read_multi(key, other_key)
+      assert_equal({}, cache.read_multi(key, other_key))
     end
   end
 
   def test_write_failure_returns_nil
     key = SecureRandom.uuid
+
     emulating_unavailability do |cache|
       assert_nil cache.write(key, SecureRandom.alphanumeric)
     end
@@ -75,10 +76,10 @@ module FailureSafetyBehavior
       other_key => SecureRandom.alphanumeric
     )
 
-
     emulating_unavailability do |cache|
-      fetched = cache.fetch_multi(key, other_key) { |k| "unavailable" }
-      assert_equal Hash[key => "unavailable", other_key => "unavailable"], fetched
+      fetched = cache.fetch_multi(key, other_key) { |_k| "unavailable" }
+
+      assert_equal({ key => "unavailable", other_key => "unavailable" }, fetched)
     end
   end
 
@@ -87,7 +88,7 @@ module FailureSafetyBehavior
     @cache.write(key, SecureRandom.alphanumeric)
 
     emulating_unavailability do |cache|
-      assert_equal false, cache.delete(key)
+      refute cache.delete(key)
     end
   end
 

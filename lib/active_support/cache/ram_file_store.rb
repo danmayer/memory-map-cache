@@ -11,7 +11,7 @@ module ActiveSupport
 
       private
 
-      def write_entry(key, entry, **options)
+      def write_entry(key, entry, **_options)
         file_path = key_file_path(key)
         # A direct binary write is significantly faster than FileStore's atomic_write
         # which writes to a temporary file and renames it.
@@ -20,18 +20,14 @@ module ActiveSupport
         true
       end
 
-      def read_entry(key, **options)
+      def read_entry(key, **_options)
         file_path = key_file_path(key)
-        if File.exist?(file_path)
-          File.open(file_path, "rb") { |f| Marshal.load(f) }
-        else
-          nil
-        end
+        File.open(file_path, "rb") { |f| Marshal.load(f) } if File.exist?(file_path)
       rescue StandardError
         nil
       end
 
-      def delete_entry(key, **options)
+      def delete_entry(key, **_options)
         file_path = key_file_path(key)
         if File.exist?(file_path)
           File.delete(file_path)
@@ -46,7 +42,7 @@ module ActiveSupport
       def key_file_path(key)
         # Use an MD5 or simply a sanitized key. Given the workload, a URL-safe key is enough.
         # Replacing slashes and colons to keep it a flat file.
-        safe_key = key.to_s.gsub(/[^0-9A-Za-z\-]/, '_')
+        safe_key = key.to_s.gsub(/[^0-9A-Za-z-]/, '_')
         File.join(cache_path, safe_key)
       end
     end

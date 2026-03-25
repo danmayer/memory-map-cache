@@ -1,0 +1,37 @@
+inherit_from: .rubocop_todo.yml
+
+plugins:
+  - rubocop-minitest
+  - rubocop-performance
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - 'ext/**/*'
+    - 'vendor/**/*'
+    - 'bin/**/*'
+    - 'tmp/**/*'
+
+Style/Documentation:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/RedundantFetchBlock:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/BlockLength:
+  Max: 30
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false

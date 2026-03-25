@@ -2,7 +2,8 @@
 
 module ConnectionPoolBehavior
   def test_connection_pool
-    Thread.report_on_exception, original_report_on_exception = false, Thread.report_on_exception
+    original_report_on_exception = Thread.report_on_exception
+    Thread.report_on_exception = false
 
     threads = []
 
@@ -29,7 +30,8 @@ module ConnectionPoolBehavior
   end
 
   def test_connection_pool_fetch
-    Thread.report_on_exception, original_report_on_exception = false, Thread.report_on_exception
+    original_report_on_exception = Thread.report_on_exception
+    Thread.report_on_exception = false
 
     threads = []
     results = []
@@ -49,6 +51,7 @@ module ConnectionPoolBehavior
         end
 
         results = threads.map(&:value)
+
         assert_equal [value] * 3, results, "All threads should return the same value"
       end
     ensure
@@ -81,5 +84,6 @@ module ConnectionPoolBehavior
   end
 
   private
-    def store_options; {}; end
+
+  def store_options = {}
 end

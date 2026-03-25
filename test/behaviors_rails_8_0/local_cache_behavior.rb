@@ -6,6 +6,7 @@ module LocalCacheBehavior
     events = with_instrumentation "write" do
       @cache.write(key, SecureRandom.uuid)
     end
+
     assert_equal @cache.class.name, events[0].payload[:store]
 
     @cache.with_local_cache do
@@ -15,7 +16,8 @@ module LocalCacheBehavior
       end
 
       expected = [@cache.class.name, @cache.send(:local_cache).class.name]
-      assert_equal expected, events.map { |p| p.payload[:store] }
+
+      assert_equal(expected, events.map { |p| p.payload[:store] })
     end
   end
 
@@ -25,6 +27,7 @@ module LocalCacheBehavior
     retval = @cache.with_local_cache do
       @cache.write(key, value)
     end
+
     assert retval
     assert_equal value, @cache.read(key)
   end
@@ -34,6 +37,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, SecureRandom.alphanumeric)
       @cache.clear
+
       assert_nil @cache.read(key)
     end
 
@@ -45,6 +49,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, SecureRandom.alphanumeric)
       @cache.clear(nil)
+
       assert_nil @cache.read(key)
     end
 
@@ -65,12 +70,15 @@ module LocalCacheBehavior
 
     @cache.with_local_cache do
       @cache.write(key, value)
+
       assert_equal value, @cache.read(key)
 
       @cache.send(:bypass_local_cache) { @cache.write(key, other_value) }
+
       assert_equal value, @cache.read(key)
 
       @cache.cleanup
+
       assert_equal other_value, @cache.read(key)
     end
   end
@@ -81,6 +89,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, value)
       @peek.delete(key)
+
       assert_equal value, @cache.read(key)
     end
   end
@@ -91,6 +100,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, type: value)
       local_value = @cache.read(key)
+
       assert_equal(value, local_value.delete(:type))
       assert_equal({ type: value }, @cache.read(key))
     end
@@ -100,6 +110,7 @@ module LocalCacheBehavior
     key = SecureRandom.uuid
     value = SecureRandom.alphanumeric
     @cache.write(key, value)
+
     @cache.with_local_cache do
       assert_equal value, @cache.read(key)
     end
@@ -111,6 +122,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       assert_nil @cache.read(key)
       @cache.send(:bypass_local_cache) { @cache.write(key, value) }
+
       assert_nil @cache.read(key)
     end
   end
@@ -120,6 +132,7 @@ module LocalCacheBehavior
     value = SecureRandom.alphanumeric
     @cache.with_local_cache do
       @cache.send(:local_cache).write_entry(key, value)
+
       assert_equal value, @cache.send(:local_cache).fetch_entry(key)
     end
   end
@@ -131,6 +144,7 @@ module LocalCacheBehavior
       assert @cache.write(key, nil)
       assert_nil @cache.read(key)
       @peek.write(key, value)
+
       assert_nil @cache.read(key)
     end
   end
@@ -141,6 +155,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, value)
       @cache.write(key, SecureRandom.alphanumeric, unless_exist: true)
+
       assert_equal @peek.read(key), @cache.read(key)
     end
   end
@@ -150,6 +165,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, SecureRandom.alphanumeric)
       @cache.delete(key)
+
       assert_nil @cache.read(key)
     end
   end
@@ -171,6 +187,7 @@ module LocalCacheBehavior
       @cache.write(other_key, SecureRandom.alphanumeric)
       @cache.write(third_key, value)
       @cache.delete_matched("#{prefix}*")
+
       assert_not @cache.exist?(key)
       assert_not @cache.exist?(other_key)
       assert_equal value, @cache.read(third_key)
@@ -182,6 +199,7 @@ module LocalCacheBehavior
     @cache.with_local_cache do
       @cache.write(key, SecureRandom.alphanumeric)
       @peek.delete(key)
+
       assert @cache.exist?(key)
     end
   end
@@ -195,6 +213,7 @@ module LocalCacheBehavior
       @cache.increment(key)
 
       expected = @peek.read(key, raw: true)
+
       assert_equal 3, Integer(expected)
       assert_equal expected, @cache.read(key, raw: true)
     end
@@ -209,6 +228,7 @@ module LocalCacheBehavior
       @cache.decrement(key)
 
       expected = @peek.read(key, raw: true)
+
       assert_equal 2, Integer(expected)
       assert_equal expected, @cache.read(key, raw: true)
     end
@@ -221,8 +241,9 @@ module LocalCacheBehavior
       @cache.fetch_multi(key, other_key) { |_key| true }
       @peek.delete(key)
       @peek.delete(other_key)
-      assert_equal true, @cache.read(key)
-      assert_equal true, @cache.read(other_key)
+
+      assert @cache.read(key)
+      assert @cache.read(other_key)
     end
   end
 
@@ -235,6 +256,7 @@ module LocalCacheBehavior
       @cache.write(key, value, raw: true)
       @peek.write(other_key, other_value, raw: true)
       values = @cache.read_multi(key, other_key, raw: true)
+
       assert_equal value, @cache.read(key, raw: true)
       assert_equal other_value, @cache.read(other_key, raw: true)
       assert_equal value, values[key]
@@ -258,6 +280,7 @@ module LocalCacheBehavior
       initial = +"bar"
       @cache.write(key, initial)
       initial << "baz"
+
       assert_equal "bar", @cache.read(key)
     end
   end
@@ -268,6 +291,7 @@ module LocalCacheBehavior
       initial = +"bar"
       @cache.fetch(key) { initial }
       initial << "baz"
+
       assert_equal "bar", @cache.read(key)
       assert_equal "bar", @cache.fetch(key)
     end
@@ -276,8 +300,9 @@ module LocalCacheBehavior
   def test_middleware
     key = SecureRandom.uuid
     value = SecureRandom.alphanumeric
-    app = lambda { |env|
+    app = lambda { |_env|
       result = @cache.write(key, value)
+
       assert_equal value, @cache.read(key) # make sure 'foo' was written
       assert result
       [200, {}, []]
@@ -298,6 +323,7 @@ module LocalCacheBehavior
           assert_equal value, @cache.read(key)
           other_value
         end
+
         assert_equal other_value, result
       end
     end
@@ -307,7 +333,7 @@ module LocalCacheBehavior
     key = SecureRandom.uuid
     @cache.with_local_cache do
       assert @cache.write(key, false)
-      assert_equal false, @cache.read(key)
+      refute @cache.read(key)
     end
   end
 

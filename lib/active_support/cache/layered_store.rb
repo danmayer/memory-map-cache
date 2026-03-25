@@ -2,7 +2,7 @@ require "active_support/cache"
 
 module ActiveSupport
   module Cache
-    # A caching proxy that layers a fast, node-local cache (L1) in front of a 
+    # A caching proxy that layers a fast, node-local cache (L1) in front of a
     # persistent, distributed remote network cache (L2).
     class LayeredStore < Store
       attr_reader :l1_store, :l2_store
@@ -37,7 +37,7 @@ module ActiveSupport
       def delete_matched(matcher, options = nil)
         begin
           @l1_store.delete_matched(matcher, options)
-        rescue NotImplementedError => _
+        rescue NotImplementedError => _e
         end
         @l2_store.delete_matched(matcher, options)
       end
@@ -46,9 +46,7 @@ module ActiveSupport
 
       def read_entry(key, **options)
         entry = @l1_store.send(:read_entry, key, **options)
-        if entry && !entry.expired?
-          return entry
-        end
+        return entry if entry && !entry.expired?
 
         entry = @l2_store.send(:read_entry, key, **options)
         if entry && !entry.expired?
@@ -63,7 +61,7 @@ module ActiveSupport
 
       def write_entry(key, entry, **options)
         @l2_store.send(:write_entry, key, entry, **options)
-        
+
         l1_options = options.dup
         l1_options[:expires_in] = @l1_expires_in if @l1_expires_in
         l1_entry = ActiveSupport::Cache::Entry.new(entry.value, **l1_options)
@@ -82,11 +80,11 @@ module ActiveSupport
         return l1_results if missing_names.empty?
 
         l2_results = @l2_store.send(:read_multi_entries, missing_names, **options)
-        
+
         if l2_results.any?
           l1_options = options.dup
           l1_options[:expires_in] = @l1_expires_in if @l1_expires_in
-          
+
           l1_entries_hash = l2_results.transform_values { |v| ActiveSupport::Cache::Entry.new(v, **l1_options) }
           @l1_store.send(:write_multi_entries, l1_entries_hash, **l1_options)
         end
@@ -96,14 +94,14 @@ module ActiveSupport
 
       def write_multi_entries(hash, **options)
         @l2_store.send(:write_multi_entries, hash, **options)
-        
+
         l1_options = options.dup
         l1_options[:expires_in] = @l1_expires_in if @l1_expires_in
-        
+
         l1_entries_hash = hash.transform_values do |entry|
           ActiveSupport::Cache::Entry.new(entry.value, **l1_options)
         end
-        
+
         @l1_store.send(:write_multi_entries, l1_entries_hash, **l1_options)
       end
 

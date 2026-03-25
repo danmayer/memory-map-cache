@@ -12,7 +12,7 @@ module CacheInstrumentationBehavior
       @cache.write_multi(writes)
     end
 
-    assert_equal %w[ cache_write_multi.active_support ], events.map(&:name)
+    assert_equal %w[cache_write_multi.active_support], events.map(&:name)
     assert_nil events[0].payload[:super_operation]
     assert_equal({ normalized_key(key_1) => value_1, normalized_key(key_2) => value_2 }, events[0].payload[:key])
   end
@@ -27,7 +27,7 @@ module CacheInstrumentationBehavior
       @cache.fetch_multi(key_2, key_1) { |key| key * 2 }
     end
 
-    assert_equal %w[ cache_read_multi.active_support ], events.map(&:name)
+    assert_equal %w[cache_read_multi.active_support], events.map(&:name)
     assert_equal :fetch_multi, events[0].payload[:super_operation]
     assert_equal [normalized_key(key_2), normalized_key(key_1)], events[0].payload[:key]
     assert_equal [normalized_key(key_1)], events[0].payload[:hits]
@@ -45,7 +45,7 @@ module CacheInstrumentationBehavior
       @cache.fetch_multi(key_1, key_2) { |key| key * 2 }
     end
 
-    assert_equal %w[ cache_read_multi.active_support cache_write_multi.active_support ], operations
+    assert_equal %w[cache_read_multi.active_support cache_write_multi.active_support], operations
   end
 
   def test_read_multi_instrumentation
@@ -58,7 +58,7 @@ module CacheInstrumentationBehavior
       @cache.read_multi(key_2, key_1)
     end
 
-    assert_equal %w[ cache_read_multi.active_support ], events.map(&:name)
+    assert_equal %w[cache_read_multi.active_support], events.map(&:name)
     assert_equal [normalized_key(key_2), normalized_key(key_1)], events[0].payload[:key]
     assert_equal [normalized_key(key_1)], events[0].payload[:hits]
     assert_equal @cache.class.name, events[0].payload[:store]
@@ -72,11 +72,10 @@ module CacheInstrumentationBehavior
       @cache.increment(key_1)
     end
 
-    assert_equal %w[ cache_increment.active_support ], events.map(&:name)
+    assert_equal %w[cache_increment.active_support], events.map(&:name)
     assert_equal normalized_key(key_1), events[0].payload[:key]
     assert_equal @cache.class.name, events[0].payload[:store]
   end
-
 
   def test_decrement_instrumentation
     key_1 = SecureRandom.uuid
@@ -86,24 +85,25 @@ module CacheInstrumentationBehavior
       @cache.decrement(key_1)
     end
 
-    assert_equal %w[ cache_decrement.active_support ], events.map(&:name)
+    assert_equal %w[cache_decrement.active_support], events.map(&:name)
     assert_equal normalized_key(key_1), events[0].payload[:key]
     assert_equal @cache.class.name, events[0].payload[:store]
   end
 
   private
-    def with_instrumentation(method)
-      event_name = "cache_#{method}.active_support"
 
-      [].tap do |events|
-        ActiveSupport::Notifications.subscribe(event_name) { |event| events << event }
-        yield
-      end
-    ensure
-      ActiveSupport::Notifications.unsubscribe event_name
-    end
+  def with_instrumentation(method)
+    event_name = "cache_#{method}.active_support"
 
-    def normalized_key(key)
-      @cache.send(:normalize_key, key, @cache.options)
+    [].tap do |events|
+      ActiveSupport::Notifications.subscribe(event_name) { |event| events << event }
+      yield
     end
+  ensure
+    ActiveSupport::Notifications.unsubscribe event_name
+  end
+
+  def normalized_key(key)
+    @cache.send(:normalize_key, key, @cache.options)
+  end
 end

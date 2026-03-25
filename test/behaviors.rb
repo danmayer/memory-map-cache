@@ -16,7 +16,7 @@ if ActiveSupport::VERSION::MAJOR == 7 && ActiveSupport::VERSION::MINOR == 2
   require_relative "behaviors_rails_7_2/failure_safety_behavior"
   require_relative "behaviors_rails_7_2/failure_raising_behavior"
   require_relative "behaviors_rails_7_2/local_cache_behavior"
-elsif ActiveSupport::VERSION::MAJOR == 8 && ActiveSupport::VERSION::MINOR == 0
+elsif ActiveSupport::VERSION::MAJOR == 8 && ActiveSupport::VERSION::MINOR.zero?
   require_relative "behaviors_rails_8_0/cache_delete_matched_behavior"
   require_relative "behaviors_rails_8_0/cache_increment_decrement_behavior"
   require_relative "behaviors_rails_8_0/cache_instrumentation_behavior"

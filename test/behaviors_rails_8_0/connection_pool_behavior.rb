@@ -2,7 +2,8 @@
 
 module ConnectionPoolBehavior
   def test_connection_pool
-    Thread.report_on_exception, original_report_on_exception = false, Thread.report_on_exception
+    original_report_on_exception = Thread.report_on_exception
+    Thread.report_on_exception = false
 
     threads = []
 
@@ -51,5 +52,6 @@ module ConnectionPoolBehavior
   end
 
   private
-    def store_options; {}; end
+
+  def store_options = {}
 end
