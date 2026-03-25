@@ -24,14 +24,14 @@ module ActiveSupport
         @l2_store.cleanup(options)
       end
 
-      def increment(name, amount = 1, **options)
-        @l1_store.delete(name, **options) # Invalidate L1 on increment to prevent stale local counters
-        @l2_store.increment(name, amount, **options)
+      def increment(name, amount = 1, **)
+        @l1_store.delete(name, **) # Invalidate L1 on increment to prevent stale local counters
+        @l2_store.increment(name, amount, **)
       end
 
-      def decrement(name, amount = 1, **options)
-        @l1_store.delete(name, **options) # Invalidate L1 on decrement
-        @l2_store.decrement(name, amount, **options)
+      def decrement(name, amount = 1, **)
+        @l1_store.delete(name, **) # Invalidate L1 on decrement
+        @l2_store.decrement(name, amount, **)
       end
 
       def delete_matched(matcher, options = nil)
@@ -68,9 +68,9 @@ module ActiveSupport
         @l1_store.send(:write_entry, key, l1_entry, **l1_options)
       end
 
-      def delete_entry(key, **options)
-        @l2_store.send(:delete_entry, key, **options)
-        @l1_store.send(:delete_entry, key, **options)
+      def delete_entry(key, **)
+        @l2_store.send(:delete_entry, key, **)
+        @l1_store.send(:delete_entry, key, **)
       end
 
       def read_multi_entries(names, **options)
@@ -105,9 +105,9 @@ module ActiveSupport
         @l1_store.send(:write_multi_entries, l1_entries_hash, **l1_options)
       end
 
-      def delete_multi_entries(names, **options)
-        @l2_store.send(:delete_multi_entries, names, **options)
-        @l1_store.send(:delete_multi_entries, names, **options)
+      def delete_multi_entries(names, **)
+        @l2_store.send(:delete_multi_entries, names, **)
+        @l1_store.send(:delete_multi_entries, names, **)
       end
     end
   end

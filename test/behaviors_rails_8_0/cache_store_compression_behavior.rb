@@ -143,29 +143,29 @@ module CacheStoreCompressionBehavior
     ActiveSupport::Cache.with(format_version: format_version, &)
   end
 
-  def assert_compress(value, **options)
-    assert_operator compute_entry_size_reduction(value, **options), :>, 0
+  def assert_compress(value, **)
+    assert_operator compute_entry_size_reduction(value, **), :>, 0
   end
 
-  def assert_not_compress(value, **options)
-    assert_equal 0, compute_entry_size_reduction(value, **options)
+  def assert_not_compress(value, **)
+    assert_equal 0, compute_entry_size_reduction(value, **)
   end
 
-  def assert_compression(compress, **options)
+  def assert_compression(compress, **)
     if compress == :all
-      assert_compress SMALL_STRING, **options
-      assert_compress SMALL_OBJECT, **options
+      assert_compress(SMALL_STRING, **)
+      assert_compress(SMALL_OBJECT, **)
     else
-      assert_not_compress SMALL_STRING, **options
-      assert_not_compress SMALL_OBJECT, **options
+      assert_not_compress(SMALL_STRING, **)
+      assert_not_compress(SMALL_OBJECT, **)
     end
 
     if compress
-      assert_compress LARGE_STRING, **options
-      assert_compress LARGE_OBJECT, **options
+      assert_compress(LARGE_STRING, **)
+      assert_compress(LARGE_OBJECT, **)
     else
-      assert_not_compress LARGE_STRING, **options
-      assert_not_compress LARGE_OBJECT, **options
+      assert_not_compress(LARGE_STRING, **)
+      assert_not_compress(LARGE_OBJECT, **)
     end
   end
 

@@ -28,8 +28,8 @@ module ActiveSupport
         new_value
       end
 
-      def decrement(name, amount = 1, **options)
-        increment(name, -amount, **options)
+      def decrement(name, amount = 1, **)
+        increment(name, -amount, **)
       end
 
       def delete_matched(matcher, options = nil)
@@ -38,15 +38,15 @@ module ActiveSupport
 
       protected
 
-      def write_entry(key, entry, **options)
-        payload = serialize_entry(entry, **options)
+      def write_entry(key, entry, **)
+        payload = serialize_entry(entry, **)
         # the payload is a standard string output from internal ActiveSupport serializers
         @native.write_raw(key.to_s, payload)
       end
 
-      def read_entry(key, **options)
+      def read_entry(key, **)
         payload = @native.read_raw(key.to_s)
-        payload ? deserialize_entry(payload, **options) : nil
+        payload ? deserialize_entry(payload, **) : nil
       end
 
       def read_multi_entries(names, **options)
@@ -65,10 +65,10 @@ module ActiveSupport
         results
       end
 
-      def write_multi_entries(hash, **options)
+      def write_multi_entries(hash, **)
         raw_hash = {}
         hash.each do |key, entry|
-          raw_hash[key.to_s] = serialize_entry(entry, **options)
+          raw_hash[key.to_s] = serialize_entry(entry, **)
         end
         @native.write_multi_raw(raw_hash)
       end
