@@ -139,8 +139,8 @@ module CacheStoreCompressionBehavior
   SMALL_OBJECT = { data: SMALL_STRING }.freeze
   LARGE_OBJECT = { data: LARGE_STRING }.freeze
 
-  def with_format(format_version, &block)
-    ActiveSupport::Cache.with(format_version: format_version, &block)
+  def with_format(format_version, &)
+    ActiveSupport::Cache.with(format_version: format_version, &)
   end
 
   def assert_compress(value, **options)

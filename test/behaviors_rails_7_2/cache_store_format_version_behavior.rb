@@ -125,7 +125,7 @@ module CacheStoreFormatVersionBehavior
 
   private
 
-  def with_format(format_version, &block)
-    ActiveSupport::Cache.with(format_version: format_version, &block)
+  def with_format(format_version, &)
+    ActiveSupport::Cache.with(format_version: format_version, &)
   end
 end

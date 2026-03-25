@@ -85,7 +85,7 @@ module CacheStoreFormatVersionBehavior
         self.class.send(:remove_const, :RemovedConstant)
 
         assert_nil @store.read(key)
-        assert_equal(false, @store.exist?(key))
+        refute(@store.exist?(key))
         assert_equal("new-value", @store.fetch(key) { "new-value" })
         assert_equal("new-value", @store.read(key))
         begin
@@ -125,7 +125,7 @@ module CacheStoreFormatVersionBehavior
 
   private
 
-  def with_format(format_version, &block)
-    ActiveSupport::Cache.with(format_version: format_version, &block)
+  def with_format(format_version, &)
+    ActiveSupport::Cache.with(format_version: format_version, &)
   end
 end
