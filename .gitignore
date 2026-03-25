@@ -19,6 +19,7 @@ doc/
 /.bundle/
 /vendor/bundle
 /lib/bundler/man/
+Gemfile.lock
 
 # C extensions build artifacts
 *.o
