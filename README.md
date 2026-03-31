@@ -16,6 +16,20 @@ And then execute:
 $ bundle install
 ```
 
+### Testing Locally
+
+To verify and install this gem on another project on your local machine before publishing it to RubyGems, you can link it directly in that project's Gemfile using the `path:` option:
+
+```ruby
+gem 'memory_map_cache', path: '/path/to/your/local/cloned/memory-map-cache'
+```
+
+Alternatively, you can build and install the gem locally into your system:
+```shell
+$ bundle exec rake build
+$ gem install pkg/memory_map_cache-0.1.0.gem
+```
+
 ## Configuration
 
 Configure `MemoryMapCacheStore` seamlessly in your Rails `config/environments/production.rb` or `development.rb`:
