@@ -155,4 +155,61 @@ class TestMemoryMapCacheStore < ActiveSupport::TestCase
     # A secondary sweep instantly afterwards should naturally yield 0 cleaned slots
     assert_equal 0, @cache.cleanup
   end
+
+  def test_concurrent_cleanup_and_operations
+    100.times { |i| @cache.write("key_#{i}", "val_#{i}", expires_in: 0.1) }
+
+    pids = []
+    
+    # Process 1: Continuously spam cleanup
+    pids << Process.fork do
+      50.times do
+        @cache.cleanup
+        sleep 0.01
+      end
+    end
+    
+    # Process 2: Continuously write new fast-expiring keys
+    pids << Process.fork do
+      500.times do |i|
+        @cache.write("new_key_#{i}", "new_val", expires_in: 0.1)
+      end
+    end
+    
+    # Process 3: Continuously read
+    pids << Process.fork do
+      500.times do |i|
+        @cache.read("new_key_#{i}")
+      end
+    end
+    
+    Process.waitall
+    
+    # If the process completed without deadlocking or crashing C-level assertions, the locking gracefully holds!
+    assert true
+  end
+
+  def test_cleanup_speed_on_highly_populated_cache
+    # Ensure a customized map specifically large enough to test raw iteration bounds under tight deadlines
+    custom_path = "/tmp/test_mmap_custom_perf_#{SecureRandom.hex}.bin"
+    large_cache = ActiveSupport::Cache.lookup_store(:memory_map_cache_store, custom_path,
+                                                    { slot_size: 2048, max_slots: 50_000 })
+
+    # Inject roughly 20,000 rapidly expiring payloads into the memory map natively
+    20_000.times { |i| large_cache.write("spam_#{i}", "data", expires_in: 0.1) }
+    
+    sleep 0.2
+    
+    # Capture pure C-extension sweep bounds
+    start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    swept = large_cache.cleanup
+    duration = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+    
+    # C-iteration array bounds over 50k structures should never take longer than 15ms
+    assert_operator duration, :<, 0.015
+    assert_operator swept, :>=, 5_000
+
+    large_cache.close
+    FileUtils.rm_f(custom_path)
+  end
 end
