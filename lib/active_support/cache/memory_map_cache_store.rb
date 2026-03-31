@@ -17,6 +17,10 @@ module ActiveSupport
         @native.clear
       end
 
+      def cleanup(options = nil)
+        @native.cleanup
+      end
+
       def close
         @native.close
       end
@@ -41,7 +45,8 @@ module ActiveSupport
       def write_entry(key, entry, **)
         payload = serialize_entry(entry, **)
         # the payload is a standard string output from internal ActiveSupport serializers
-        @native.write_raw(key.to_s, payload)
+        expires_at = entry.expires_at ? entry.expires_at.to_i : 0
+        @native.write_raw(key.to_s, payload, expires_at)
       end
 
       def read_entry(key, **)

@@ -137,4 +137,22 @@ class TestMemoryMapCacheStore < ActiveSupport::TestCase
     custom_cache.close
     FileUtils.rm_f(custom_path)
   end
+
+  def test_native_cleanup_wipes_expired_entries_from_memory
+    @cache.write("expired_key", "gone", expires_in: 0.1)
+    @cache.write("persisted_key", "here", expires_in: 10.0)
+
+    # Wait for the first payload to officially expire in POSIX time
+    sleep 0.2
+
+    # Evict all expired payloads instantly across the C memory footprint
+    swept_slots = @cache.cleanup
+    assert_equal 1, swept_slots
+
+    # Ensure unexpired data is flawlessly maintained through the sweep
+    assert_equal "here", @cache.read("persisted_key")
+
+    # A secondary sweep instantly afterwards should naturally yield 0 cleaned slots
+    assert_equal 0, @cache.cleanup
+  end
 end

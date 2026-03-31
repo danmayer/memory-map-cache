@@ -200,7 +200,7 @@ static inline int find_slot(mmap_cache_t *mc, const char *key_str,
       if (insert)
         return idx;
     } else {
-      char *stored_key = slot_ptr + 4;
+      char *stored_key = slot_ptr + 12;
       if (k_len == key_len && memcmp(stored_key, key_str, key_len) == 0) {
         return idx;
       }
@@ -212,7 +212,10 @@ static inline int find_slot(mmap_cache_t *mc, const char *key_str,
   }
 }
 
-static VALUE mmap_cache_write(VALUE self, VALUE key, VALUE payload) {
+static VALUE mmap_cache_write(int argc, VALUE *argv, VALUE self) {
+  VALUE key, payload, rb_expires_at;
+  rb_scan_args(argc, argv, "21", &key, &payload, &rb_expires_at);
+
   mmap_cache_t *mc;
   TypedData_Get_Struct(self, mmap_cache_t, &mmap_cache_type, mc);
   ensure_mmap(mc);
@@ -224,7 +227,13 @@ static VALUE mmap_cache_write(VALUE self, VALUE key, VALUE payload) {
   const char *v_ptr = RSTRING_PTR(payload);
   size_t v_len = RSTRING_LEN(payload);
 
-  if (k_len + v_len + 4 > mc->slot_size) {
+  uint64_t expires_at = 0;
+  if (!NIL_P(rb_expires_at)) {
+    expires_at = (uint64_t)NUM2ULL(rb_expires_at);
+  }
+
+  // 2 + 2 + 8 = 12 bytes header
+  if (k_len + v_len + 12 > mc->slot_size) {
     return Qfalse; // Too large for slot
   }
 
@@ -234,12 +243,13 @@ static VALUE mmap_cache_write(VALUE self, VALUE key, VALUE payload) {
   if (slot >= 0) {
     char *slot_ptr = mc->mmap_ptr + METADATA_OFFSET + (slot * mc->slot_size);
 
-    // Write layout: [key_len(2)] [val_len(2)] [KEY] [VAL]
+    // Write layout: [key_len(2)] [val_len(2)] [expires_at(8)] [KEY] [VAL]
     *(uint16_t *)slot_ptr = (uint16_t)k_len;
     *(uint16_t *)(slot_ptr + 2) = (uint16_t)v_len;
+    *(uint64_t *)(slot_ptr + 4) = expires_at;
 
-    memcpy(slot_ptr + 4, k_ptr, k_len);
-    memcpy(slot_ptr + 4 + k_len, v_ptr, v_len);
+    memcpy(slot_ptr + 12, k_ptr, k_len);
+    memcpy(slot_ptr + 12 + k_len, v_ptr, v_len);
 
     pthread_rwlock_unlock(mc->rwlock);
     return Qtrue;
@@ -247,6 +257,35 @@ static VALUE mmap_cache_write(VALUE self, VALUE key, VALUE payload) {
 
   pthread_rwlock_unlock(mc->rwlock);
   return Qfalse; // Out of slots
+}
+
+static VALUE mmap_cache_cleanup(VALUE self) {
+  mmap_cache_t *mc;
+  TypedData_Get_Struct(self, mmap_cache_t, &mmap_cache_type, mc);
+  ensure_mmap(mc);
+
+  uint64_t now = (uint64_t)time(NULL);
+  int cleaned = 0;
+
+  pthread_rwlock_wrlock(mc->rwlock);
+
+  char *base = mc->mmap_ptr + METADATA_OFFSET;
+  for (uint32_t i = 0; i < mc->max_slots; i++) {
+    char *slot_ptr = base + (i * mc->slot_size);
+    uint16_t k_len = *(uint16_t *)slot_ptr;
+
+    if (k_len > 0) {
+      uint64_t expires_at = *(uint64_t *)(slot_ptr + 4);
+      // If expires_at is correctly set and is perfectly eclipsed by current epoch time
+      if (expires_at > 0 && expires_at <= now) {
+        *(uint16_t *)slot_ptr = 0; // Tombstone / Empty
+        cleaned++;
+      }
+    }
+  }
+
+  pthread_rwlock_unlock(mc->rwlock);
+  return INT2NUM(cleaned);
 }
 
 static VALUE mmap_cache_read(VALUE self, VALUE key) {
@@ -268,7 +307,7 @@ static VALUE mmap_cache_read(VALUE self, VALUE key) {
     uint16_t v_len = *(uint16_t *)(slot_ptr + 2);
 
     if (v_len > 0) {
-      char *v_ptr = slot_ptr + 4 + k_len;
+      char *v_ptr = slot_ptr + 12 + k_len;
       result = rb_str_new(v_ptr, v_len);
     }
   }
@@ -310,7 +349,7 @@ static int write_multi_iter(VALUE key, VALUE val, VALUE data) {
   const char *v_ptr = RSTRING_PTR(val);
   size_t v_len = RSTRING_LEN(val);
 
-  if (k_len + v_len + 4 > mc->slot_size) {
+  if (k_len + v_len + 12 > mc->slot_size) {
     return ST_CONTINUE;
   }
 
@@ -319,8 +358,9 @@ static int write_multi_iter(VALUE key, VALUE val, VALUE data) {
     char *slot_ptr = mc->mmap_ptr + METADATA_OFFSET + (slot * mc->slot_size);
     *(uint16_t *)slot_ptr = (uint16_t)k_len;
     *(uint16_t *)(slot_ptr + 2) = (uint16_t)v_len;
-    memcpy(slot_ptr + 4, k_ptr, k_len);
-    memcpy(slot_ptr + 4 + k_len, v_ptr, v_len);
+    *(uint64_t *)(slot_ptr + 4) = 0; // Default no expiration on raw multi 
+    memcpy(slot_ptr + 12, k_ptr, k_len);
+    memcpy(slot_ptr + 12 + k_len, v_ptr, v_len);
   }
   return ST_CONTINUE;
 }
@@ -360,7 +400,7 @@ static VALUE mmap_cache_read_multi(VALUE self, VALUE rb_keys) {
       uint16_t v_len = *(uint16_t *)(slot_ptr + 2);
 
       if (v_len > 0) {
-        char *v_ptr = slot_ptr + 4 + k_len;
+        char *v_ptr = slot_ptr + 12 + k_len;
         VALUE val = rb_str_new(v_ptr, v_len);
         rb_hash_aset(result_hash, key_str, val);
       }
@@ -446,7 +486,7 @@ void Init_memory_map_cache(void) {
 
   rb_define_method(cMemoryMapCacheNative, "initialize", mmap_cache_initialize,
                    3);
-  rb_define_method(cMemoryMapCacheNative, "write_raw", mmap_cache_write, 2);
+  rb_define_method(cMemoryMapCacheNative, "write_raw", mmap_cache_write, -1);
   rb_define_method(cMemoryMapCacheNative, "read_raw", mmap_cache_read, 1);
   rb_define_method(cMemoryMapCacheNative, "delete_raw", mmap_cache_delete, 1);
   rb_define_method(cMemoryMapCacheNative, "write_multi_raw",
@@ -456,5 +496,6 @@ void Init_memory_map_cache(void) {
   rb_define_method(cMemoryMapCacheNative, "delete_multi_raw",
                    mmap_cache_delete_multi, 1);
   rb_define_method(cMemoryMapCacheNative, "clear", mmap_cache_clear, 0);
+  rb_define_method(cMemoryMapCacheNative, "cleanup", mmap_cache_cleanup, 0);
   rb_define_method(cMemoryMapCacheNative, "close", mmap_cache_close, 0);
 }
