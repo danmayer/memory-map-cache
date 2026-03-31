@@ -17,7 +17,7 @@ module ActiveSupport
         @native.clear
       end
 
-      def cleanup(options = nil)
+      def cleanup(_options = nil)
         @native.cleanup
       end
 
