@@ -81,6 +81,13 @@ The `LayeredStore` perfectly integrates into the ActiveSupport ecosystem:
 
 Thus, for heavily read-focused applications (which is 99% of caching implementations), the 12% write penalty buys you essentially **free unlimited read scalability**.
 
+### Handling Failure Scenarios (Edge Cases)
+Due to its distributed nature, the `LayeredStore` proxy aggressively protects your application from remote L2 outages while gracefully degrading local L1 bounds.
+
+1. **L2 Network Outages (Redis/Memcached drops connection)**: If your backend distributed cache goes entirely offline, ActiveSupport correctly catches the network failure and returns `false` natively. The `LayeredStore` **bubbles up the false boolean** so your application reliably detects the failure, but *it inherently stashes the payload in the L1 Local MemoryMapStore anyway*. This ensures the local application node automatically degrades into a blazing fast, standalone cache cluster that preserves extreme traffic resilience until the L2 network is restored!
+2. **L1 Slot Rejection (Payloads > 2KB Bounds)**: If you attempt to cache massive serialized fragments that exceed your `MemoryMapCache` maximum native `slot_size` constraints (e.g. 2KB), `MemoryMapCache` natively drops the fragment without crashing the Ruby VM. `LayeredStore` inherently routes around this by persistently storing the massive payload strictly in the Remote L2, natively hydrating all standard `.read` lookups explicitly from L2!
+3. **L2 Delete Operations Drop**: If you call `Rails.cache.delete("stale_key")` and the L2 Network drops the deletion command, the `LayeredStore` aggressively, unconditionally deletes the fragment from the Local L1. Because you requested a wipe, we never serve a stale copy locally just tracking L2 state.
+
 
 ## Performance Optimization
 

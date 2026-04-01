@@ -100,8 +100,33 @@ class LayeredStoreTest < ActiveSupport::TestCase
 
     # Confirm the LayeredStore reads from L2 successfully and transparently masks the L1 failure
     assert_equal huge_payload, layered_cache.read("huge_key")
-
     actual_l1.close
     FileUtils.rm_f(l1_path)
+  end
+
+  def test_l2_network_outage_returns_false_but_stashes_l1
+    # Mock an L2 connection outage actively dropping writes in a distributed system
+    @l2.stub(:write_entry, false) do
+      # L1 fallback is expected to catch the write, but the final wrapper API MUST return false
+      # ensuring Rails models/endpoints know the global network cache failed.
+      result = @cache.write("failover_test", "content")
+
+      refute result
+
+      # It natively hydrated Local L1 anyway to keep the node running hot locally
+      assert_equal "content", @l1.read("failover_test")
+    end
+  end
+
+  def test_delete_aggressively_flushes_l1_on_l2_error
+    @cache.write("doomed", "content")
+
+    @l2.stub(:delete_entry, false) do
+      # If Redis drops a delete command, ensure the local node isn't stuck actively serving cache!
+      result = @cache.delete("doomed")
+
+      refute result
+      assert_nil @l1.read("doomed")
+    end
   end
 end

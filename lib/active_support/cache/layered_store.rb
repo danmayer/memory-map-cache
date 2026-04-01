@@ -60,17 +60,28 @@ module ActiveSupport
       end
 
       def write_entry(key, entry, **options)
-        @l2_store.send(:write_entry, key, entry, **options)
+        # Always proxy L2 write first as the master distributed source of truth
+        l2_status = @l2_store.send(:write_entry, key, entry, **options)
 
+        # If L2 gracefully fails (i.e. network outage caught by ActiveSupport returning false)
+        # we still attempt to hydrate L1 blindly so the node can cache locally and stay afloat during outages!
         l1_options = options.dup
         l1_options[:expires_in] = @l1_expires_in if @l1_expires_in
         l1_entry = ActiveSupport::Cache::Entry.new(entry.value, **l1_options)
+
         @l1_store.send(:write_entry, key, l1_entry, **l1_options)
+
+        # Bubble up the remote L2 proxy truth so apps correctly detect distributed failure states
+        l2_status
       end
 
       def delete_entry(key, **)
-        @l2_store.send(:delete_entry, key, **)
+        l2_status = @l2_store.send(:delete_entry, key, **)
+
+        # Defensively ALWAYS blindly delete from L1 avoiding local stale reads if the L2 connection drops
         @l1_store.send(:delete_entry, key, **)
+
+        l2_status
       end
 
       def read_multi_entries(names, **options)
@@ -93,7 +104,7 @@ module ActiveSupport
       end
 
       def write_multi_entries(hash, **options)
-        @l2_store.send(:write_multi_entries, hash, **options)
+        l2_status = @l2_store.send(:write_multi_entries, hash, **options)
 
         l1_options = options.dup
         l1_options[:expires_in] = @l1_expires_in if @l1_expires_in
@@ -103,11 +114,14 @@ module ActiveSupport
         end
 
         @l1_store.send(:write_multi_entries, l1_entries_hash, **l1_options)
+
+        l2_status
       end
 
       def delete_multi_entries(names, **)
-        @l2_store.send(:delete_multi_entries, names, **)
+        l2_status = @l2_store.send(:delete_multi_entries, names, **)
         @l1_store.send(:delete_multi_entries, names, **)
+        l2_status
       end
     end
   end
