@@ -42,4 +42,6 @@ jobs:
         run: bundle exec rake compile
         
       - name: Execute Comparative Multiproc Benchmarks
-        run: PROCESSES=5 bundle exec ruby bench/bench_cache_multiprocess.rb
+        run: |
+          PROCESSES=5 bundle exec ruby bench/bench_cache_multiprocess.rb | tee /tmp/bench.txt
+          ruby bench/parse_markdown.rb < /tmp/bench.txt
