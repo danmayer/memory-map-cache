@@ -75,4 +75,33 @@ class LayeredStoreTest < ActiveSupport::TestCase
     assert_equal 10, @l1.read("x")
     assert_equal 20, @l2.read("y")
   end
+
+  def test_exceeding_l1_slot_size_saves_to_l2
+    # Use actual MemoryMapCache natively bounded to 2KB slots for L1
+    l1_path = "/tmp/layered_l1_#{SecureRandom.hex}.bin"
+    actual_l1 = ActiveSupport::Cache.lookup_store(:memory_map_cache_store, l1_path, { slot_size: 2048, max_slots: 100 })
+
+    # Standard unresticted memory store for L2
+    actual_l2 = ActiveSupport::Cache.lookup_store(:memory_store)
+
+    layered_cache = ActiveSupport::Cache::LayeredStore.new(actual_l1, actual_l2)
+
+    # Generate a payload larger than the 2KB L1 capacity.
+    huge_payload = SecureRandom.random_bytes(2500)
+
+    # Layered cache writing attempts to save across both domains
+    layered_cache.write("huge_key", huge_payload, compress: false)
+
+    # Confirm L1 actively rejected it natively based on capacity limits and reads back nil
+    assert_nil actual_l1.read("huge_key")
+
+    # Confirm L2 actually stored the data safely handling the long-term storage
+    assert_equal huge_payload, actual_l2.read("huge_key")
+
+    # Confirm the LayeredStore reads from L2 successfully and transparently masks the L1 failure
+    assert_equal huge_payload, layered_cache.read("huge_key")
+
+    actual_l1.close
+    FileUtils.rm_f(l1_path)
+  end
 end
