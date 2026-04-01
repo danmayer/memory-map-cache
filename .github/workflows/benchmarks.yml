@@ -1,0 +1,45 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    # Pre-provision the exact database caching services the benchmarking script expects on localhost
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+      memcached:
+        image: memcached:latest
+        ports:
+          - 11211:11211
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+          
+      - name: Setup Fast RAM Disk for File Stores
+        run: |
+          sudo mkdir -p /Volumes/RailsTestRAM
+          sudo mount -t tmpfs -o size=1024m tmpfs /Volumes/RailsTestRAM
+          sudo chmod 777 /Volumes/RailsTestRAM
+          
+      - name: Compile C-Extension Native Cache
+        run: bundle exec rake compile
+        
+      - name: Execute Comparative Multiproc Benchmarks
+        run: PROCESSES=5 bundle exec ruby bench/bench_cache_multiprocess.rb
