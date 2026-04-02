@@ -1,4 +1,5 @@
 require "active_support/cache"
+require "memory_map_cache"
 
 module ActiveSupport
   module Cache
