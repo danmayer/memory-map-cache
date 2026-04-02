@@ -1,5 +1,5 @@
 require "active_support/cache"
-require "memory_map_cache"
+require_relative "../../memory_map_cache/native_loader"
 
 module ActiveSupport
   module Cache
