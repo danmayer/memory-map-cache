@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: memory-map-cache-demo
+    env: ruby
+    buildCommand: "chmod +x ./bin/render-build.sh && ./bin/render-build.sh"
+    startCommand: "bundle exec puma -C config/puma.rb"
+    envVars:
+      - key: RAILS_MASTER_KEY
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: demo-redis
+          property: connectionString
+
+  - type: redis
+    name: demo-redis
+    ipAllowList: []

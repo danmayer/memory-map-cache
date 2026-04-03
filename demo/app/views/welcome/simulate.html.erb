@@ -1,0 +1,44 @@
+<div class="container">
+  <%= link_to "← Back to Guide", root_path, style: "color: #a0aab2; text-decoration: none; margin-bottom: 1rem; display: inline-block;" %>
+
+  <h1>Live Sandbox Demonstration</h1>
+  <p style="text-align: center; color: #a0aab2; margin-bottom: 3rem;">
+    Visually trace dynamic request workloads across Network and File bindings internally.
+  </p>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0;">Interactive Playground</h2>
+    <p>Select an architectural backend, and we will forcefully synthesize 250 massive latency-inducing fragmented queries behind the scene. Notice how subsequent refreshes on the target cache seamlessly optimize page-load speed to 0ms via Cache Hits!</p>
+    
+    <div class="controls">
+      <%= link_to "Network Strategy: Redis", simulate_path(mode: "redis"), class: "btn #{@mode == 'redis' ? 'active' : ''}" %>
+      <%= link_to "Native Strategy: MemoryMap", simulate_path(mode: "memory_map"), class: "btn #{@mode == 'memory_map' ? 'active' : ''}" %>
+      <%= link_to "Hybrid Strategy: LayeredStore", simulate_path(mode: "layered"), class: "btn #{@mode == 'layered' ? 'active' : ''}" %>
+      <%= button_to "Clear Entire Cache Arrays", clear_path(mode: @mode), method: :post, class: "btn" %>
+    </div>
+    
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Server Execution Time</h3>
+        <div class="value" style="color: #e94560;"><%= @elapsed_ms %>ms</div>
+      </div>
+      <div class="metric-card">
+        <h3>Cache Hits</h3>
+        <div class="value" style="color: #69f0ae;"><%= @hits %></div>
+      </div>
+      <div class="metric-card">
+        <h3>Cache Misses</h3>
+        <div class="value" style="color: #ffab70;"><%= @misses %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0;">Simulated Workload Logs (<%= @mode.titleize %> Mode)</h2>
+    <div class="logs">
+      <% @data.each do |trace| %>
+        <p class="<%= trace.include?('generated') ? 'miss' : 'hit' %>"><%= trace %></p>
+      <% end %>
+    </div>
+  </div>
+</div>

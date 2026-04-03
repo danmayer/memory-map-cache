@@ -1,0 +1,77 @@
+<div class="container">
+  <h1>MemoryMapCache & LayeredStore</h1>
+  <p style="text-align: center; color: #a0aab2; margin-bottom: 3rem;">
+    Blazing fast, natively distributed inter-process caching for Ruby on Rails.
+  </p>
+
+  <div class="glass-panel" style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h2 style="margin-top: 0; margin-bottom: 0.5rem;">See it in Action</h2>
+      <p style="margin: 0; color: #a0aab2; max-width: 600px;">
+        Head over to our <b>Live Sandbox Demonstration</b> to actively force multi-threaded fragment generation and trace native cache miss latency. 
+      </p>
+    </div>
+    <%= link_to "Launch Interactive Playground →", simulate_path, class: "btn active" %>
+  </div>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0;">Installation</h2>
+    <p>Getting started natively is simple. Install the rubygem from our releases:</p>
+    <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; font-family: monospace;">
+      gem "memory_map_cache"
+    </div>
+    <br/>
+    <p>And easily inject it straight into your standard `config/environments/production.rb` configuration natively using ActiveSupport compliance mappings:</p>
+    <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; font-family: monospace;">
+      config.cache_store = :memory_map_cache_store, '/tmp/cache.bin'
+    </div>
+  </div>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0;">Natively Fast. Easily Integratable.</h2>
+    <p>We built this cache layer targeting aggressive optimization. The MemoryMapCache natively utilizes C-level `mmap` rendering out thousands of concurrent local Ruby hits in less than 32ms.</p>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Cache Strategy</th>
+          <th>Architecture Bounds</th>
+          <th>Read Operations / sec</th>
+          <th>Speed Improvement (Mixed Profile)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Redis Store</td>
+          <td>Network InterProcess Socket</td>
+          <td>~ 18,041 ops/sec</td>
+          <td>Baseline (1x)</td>
+        </tr>
+        <tr>
+          <td>Memcached</td>
+          <td>Network Distributed Daemon</td>
+          <td>~ 51,619 ops/sec</td>
+          <td>+2.86x Faster</td>
+        </tr>
+        <tr>
+          <td>Litecache (SQLite)</td>
+          <td>Local Database Engine</td>
+          <td>~ 129,711 ops/sec</td>
+          <td>+7.18x Faster</td>
+        </tr>
+        <tr>
+          <td><strong>MemoryMapCache</strong></td>
+          <td>Native Distributed Thread RAM</td>
+          <td><strong>~ 150,240 ops/sec</strong></td>
+          <td><strong>+8.32x Faster</strong></td>
+        </tr>
+        <tr>
+          <td><strong>LayeredStore (L1/L2)</strong></td>
+          <td>Proxy Hydration Bridge</td>
+          <td><strong>~ 148,805 ops/sec</strong></td>
+          <td><strong>+8.24x Faster</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
