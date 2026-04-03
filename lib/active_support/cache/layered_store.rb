@@ -7,6 +7,10 @@ module ActiveSupport
     class LayeredStore < Store
       attr_reader :l1_store, :l2_store
 
+      def self.supports_cache_versioning?
+        true
+      end
+
       def initialize(l1_store, l2_store, **options)
         super(options)
         @l1_store = l1_store

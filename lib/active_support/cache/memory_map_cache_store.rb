@@ -6,6 +6,10 @@ module ActiveSupport
     class MemoryMapCacheStore < Store
       prepend Strategy::LocalCache
 
+      def self.supports_cache_versioning?
+        true
+      end
+
       def initialize(cache_path, **options)
         super(options)
         @cache_path = cache_path
