@@ -1,24 +1,41 @@
 class WelcomeController < ApplicationController
+  skip_before_action :verify_authenticity_token, only: [:clear, :benchmark_start]
+
   def index
     # Pure statically cacheable landing page
   end
 
   def benchmark
-    require "open3"
     @system_info = `uname -a`.strip
     @ruby_info = RUBY_DESCRIPTION
-
-    script_path = Rails.root.join("..", "bench", "bench_cache_multiprocess.rb")
-    parser_path = Rails.root.join("..", "bench", "parse_markdown.rb")
-
     @benchmark_script_url = "https://github.com/danmayer/memory-map-cache/blob/main/bench/bench_cache_multiprocess.rb"
-    
-    envs = {}
-    if Rails.env.test?
-      envs = { "PROCESSES" => "1", "ITERATIONS" => "1", "PAYLOADS" => "100" }
-    end
+  end
 
-    @markdown_output, _status = Open3.capture2(envs, "bundle exec ruby #{script_path} | ruby #{parser_path}")
+  def benchmark_start
+    file_path = Rails.root.join("tmp", "live_benchmark.md")
+    FileUtils.mkdir_p(File.dirname(file_path))
+    File.write(file_path, "> Initializing physical torture test array...\n\n")
+
+    envs = Rails.env.test? ? { "PROCESSES" => "1", "ITERATIONS" => "1", "PAYLOADS" => "100" } : {}
+
+    Thread.new do
+      script_path = Rails.root.join("..", "bench", "bench_cache_multiprocess.rb")
+      parser_path = Rails.root.join("..", "bench", "parse_markdown.rb")
+      
+      system(envs, "bundle exec ruby #{script_path} | ruby #{parser_path} >> #{file_path}")
+      
+      File.open(file_path, "a") { |f| f.puts "\n\n**Benchmark Array Execution Completed Successfully.**" }
+    end
+    
+    head :ok
+  end
+
+  def benchmark_results
+    file_path = Rails.root.join("tmp", "live_benchmark.md")
+    content = File.exist?(file_path) ? File.read(file_path) : "Awaiting execution..."
+    
+    require "redcarpet"
+    render plain: Redcarpet::Markdown.new(Redcarpet::Render::HTML, tables: true, fenced_code_blocks: true).render(content)
   end
 
   def simulate
