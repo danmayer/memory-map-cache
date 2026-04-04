@@ -12,6 +12,7 @@ AllCops:
     - 'vendor/**/*'
     - 'bin/**/*'
     - 'tmp/**/*'
+    - 'demo/**/*'
 
 Style/Documentation:
   Enabled: false
