@@ -1,0 +1,30 @@
+<div class="container">
+  <h1>Live Environment Benchmark Runner</h1>
+  <p style="text-align: center; color: #a0aab2; margin-bottom: 3rem;">
+    Dynamically force a brutal Multiprocess Cache comparison payload directly against this live Production Environment's physical hardware.
+  </p>
+
+  <div class="glass-panel" style="margin-bottom: 2rem;">
+    <h3 style="margin-top: 0; color: #69f0ae;">Live System Diagnostics</h3>
+    <ul style="color: #b8c1ca; font-family: monospace;">
+      <li><b>OS Kernel Architecture:</b> <%= @system_info %></li>
+      <li><b>Runtime Compilation:</b> <%= @ruby_info %></li>
+    </ul>
+
+    <p style="color: #a0aab2;">
+      The system executes our official open-source Torture Suite script natively. You can organically review the full physical execution array code directly here: <br/>
+      <a href="<%= @benchmark_script_url %>" target="_blank" style="color: #4facfe;">bench_cache_multiprocess.rb</a>
+    </p>
+  </div>
+
+  <div class="glass-panel">
+    <h3 style="margin-top: 0; color: #ff8a00;">Live Generated Telemetry</h3>
+    <div style="background: rgba(0,0,0,0.6); padding: 2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
+      <%= raw Redcarpet::Markdown.new(Redcarpet::Render::HTML, tables: true, fenced_code_blocks: true).render(@markdown_output) %>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <%= link_to "← Return to Index", root_path, class: "btn" %>
+  </div>
+</div>

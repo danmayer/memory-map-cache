@@ -3,6 +3,17 @@ class WelcomeController < ApplicationController
     # Pure statically cacheable landing page
   end
 
+  def benchmark
+    @system_info = `uname -a`.strip
+    @ruby_info = RUBY_DESCRIPTION
+
+    script_path = Rails.root.join("..", "bench", "bench_cache_multiprocess.rb")
+    parser_path = Rails.root.join("..", "bench", "parse_markdown.rb")
+
+    @benchmark_script_url = "https://github.com/danmayer/memory-map-cache/blob/main/bench/bench_cache_multiprocess.rb"
+    @markdown_output = `bundle exec ruby #{script_path} | ruby #{parser_path}`
+  end
+
   def simulate
     @mode = params[:mode] || "layered"
     

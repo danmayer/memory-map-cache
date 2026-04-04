@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root "welcome#index"
   get "simulate", to: "welcome#simulate"
+  get "benchmark", to: "welcome#benchmark"
   post "clear", to: "welcome#clear"
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)

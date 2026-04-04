@@ -44,3 +44,5 @@ end
 gem "redis", "~> 5.4"
 
 gem "memory_map_cache", "~> 0.1.0", path: ".."
+
+gem "redcarpet", "~> 3.6"
