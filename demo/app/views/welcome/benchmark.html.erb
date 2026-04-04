@@ -4,7 +4,7 @@
     Dynamically force a brutal Multiprocess Cache comparison payload directly against this live Production Environment's physical hardware.
   </p>
 
-  <div class="glass-panel" style="margin-bottom: 2rem;">
+  <div class="glass-panel" style="margin-bottom: 2rem; position: relative;">
     <h3 style="margin-top: 0; color: #69f0ae;">Live System Diagnostics</h3>
     <ul style="color: #b8c1ca; font-family: monospace;">
       <li><b>OS Kernel Architecture:</b> <%= @system_info %></li>
@@ -15,12 +15,17 @@
       The system executes our official open-source Torture Suite script natively. You can organically review the full physical execution array code directly here: <br/>
       <a href="<%= @benchmark_script_url %>" target="_blank" style="color: #4facfe;">bench_cache_multiprocess.rb</a>
     </p>
+
+    <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center;">
+      <button onclick="startBenchmark()" id="bench_btn" class="btn active">Run Live Benchmark Suite</button>
+      <span id="bench_status" style="color: #ff8a00; font-weight: bold; font-family: monospace;"></span>
+    </div>
   </div>
 
   <div class="glass-panel">
-    <h3 style="margin-top: 0; color: #ff8a00;">Live Generated Telemetry</h3>
-    <div style="background: rgba(0,0,0,0.6); padding: 2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto;">
-      <%= raw Redcarpet::Markdown.new(Redcarpet::Render::HTML, tables: true, fenced_code_blocks: true).render(@markdown_output) %>
+    <h3 style="margin-top: 0; color: #ffab70;">Live Streaming Telemetry</h3>
+    <div id="bench_results" style="background: rgba(0,0,0,0.6); padding: 2rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; min-height: 150px;">
+      <i style="color: #a0aab2;">Awaiting execution sequence...</i>
     </div>
   </div>
 
@@ -28,3 +33,48 @@
     <%= link_to "← Return to Index", root_path, class: "btn" %>
   </div>
 </div>
+
+<script>
+  let polling = false;
+  let intervalId = null;
+
+  function startBenchmark() {
+    if (polling) return;
+    polling = true;
+    
+    document.getElementById('bench_btn').classList.remove('active');
+    document.getElementById('bench_btn').style.opacity = '0.5';
+    document.getElementById('bench_btn').innerText = "Running Matrix...";
+    document.getElementById('bench_status').innerText = "Initializing Shell Hooks...";
+
+    // Trigger explicit asynchronous execution sequence mapped cleanly through POST!
+    fetch("<%= benchmark_start_path %>", { 
+      method: "POST", 
+      headers: { 
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '' 
+      } 
+    });
+
+    // Sub-second DOM interval polling mapping metrics natively!
+    intervalId = setInterval(() => {
+      fetch("<%= benchmark_results_path %>")
+        .then(r => r.text())
+        .then(html => {
+          document.getElementById('bench_results').innerHTML = html;
+          document.getElementById('bench_status').innerText = "(Polling live streaming output...)";
+          
+          if (html.includes("Benchmark Array Execution Completed Successfully")) {
+            clearInterval(intervalId);
+            polling = false;
+            document.getElementById('bench_btn').style.opacity = '1';
+            document.getElementById('bench_btn').innerText = "Matrix Complete. Retrigger?";
+            document.getElementById('bench_btn').classList.add('active');
+            document.getElementById('bench_status').innerText = "";
+          }
+        })
+    }, 1000);
+  }
+
+  // Auto-execute natively identically to previous synchronous pipeline on page-load
+  document.addEventListener('DOMContentLoaded', startBenchmark);
+</script>
