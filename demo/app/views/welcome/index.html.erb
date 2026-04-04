@@ -151,4 +151,15 @@
       </tbody>
     </table>
   </div>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0; color: #ffab70;">Why Use Layered Caching?</h2>
+    <p>The <b>LayeredStore (L1/L2 Proxy)</b> is an architectural strategy explicitly designed to maximize aggressive read-side distributed performance. Because it layers the lightning-fast native `MemoryMapCache` strictly in front of a synchronized standard `Redis` cluster, it achieves several critical enterprise latency optimizations:</p>
+    
+    <ul style="line-height: 1.6; color: #b8c1ca;">
+      <li><b>Eliminating Remote Network Latency:</b> Standard Redis clusters often suffer from slow ping intervals or network bounds because they aren't physically co-located cleanly alongside the Puma/Rails runtime container. By mirroring data locally via MemoryMap, we cut cross-data-center latency organically down to 0ms.</li>
+      <li><b>Mitigating Redis Hot Keys:</b> The Layered architecture algorithmically protects your backend database from heavy single-key overload. The more frequently a massive cache key is accessed globally, the faster each isolated Web Server organically pins it into their own local MemoryMap instances—natively sheltering the centralized Redis cluster from processing thousands of duplicate reads.</li>
+      <li><b>High Availability Degraded Fallback:</b> In the event your primary Redis instance fails natively during an outage, the Layered architecture relies heavily on its own internal `MemoryMapCache` buffer, rendering content gracefully and maintaining web uptime metrics organically until the network bridges normalize.</li>
+    </ul>
+  </div>
 </div>
