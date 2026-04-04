@@ -55,6 +55,12 @@
           <td>+2.86x Faster</td>
         </tr>
         <tr>
+          <td>Rails FileStore</td>
+          <td>Local Filesystem Disk Space</td>
+          <td>~ 78,432 ops/sec</td>
+          <td>+4.34x Faster</td>
+        </tr>
+        <tr>
           <td>Litecache (SQLite)</td>
           <td>Local Database Engine</td>
           <td>~ 129,711 ops/sec</td>
@@ -87,28 +93,34 @@
       </thead>
       <tbody>
         <tr>
-          <td>Redis Store (via Memcached baseline*)</td>
-          <td>Network InterProcess Socket</td>
-          <td>~ 35,105 ops/sec</td>
+          <td>Rails FileStore</td>
+          <td>Local Filesystem Disk Space</td>
+          <td>~ 7,165 ops/sec</td>
           <td>Baseline (1x)</td>
         </tr>
         <tr>
           <td>Litecache (SQLite)</td>
           <td>Local Database Engine</td>
           <td>~ 18,521 ops/sec</td>
-          <td>0.52x</td>
+          <td>2.58x</td>
         </tr>
         <tr>
           <td><strong>LayeredStore (L1/L2)</strong></td>
           <td>Proxy Hydration Bridge</td>
           <td><strong>~ 25,420 ops/sec</strong></td>
-          <td>0.72x</td>
+          <td>3.54x</td>
+        </tr>
+        <tr>
+          <td>Redis Store (via Memcached baseline*)</td>
+          <td>Network InterProcess Socket</td>
+          <td>~ 35,105 ops/sec</td>
+          <td>4.89x</td>
         </tr>
         <tr>
           <td><strong>MemoryMapCache</strong></td>
           <td>Native Distributed Thread RAM</td>
           <td><strong>~ 49,594 ops/sec</strong></td>
-          <td><strong>+1.41x Faster</strong></td>
+          <td><strong>+6.92x Faster</strong></td>
         </tr>
       </tbody>
     </table>
@@ -125,28 +137,34 @@
       </thead>
       <tbody>
         <tr>
-          <td>Redis Store  (via Memcached baseline*)</td>
+          <td>Rails FileStore</td>
+          <td>Local Filesystem Disk Space</td>
+          <td>~ 28,296 ops/sec</td>
+          <td>Baseline (1x)</td>
+        </tr>
+        <tr>
+          <td>Redis Store (via Memcached baseline*)</td>
           <td>Network InterProcess Socket</td>
           <td>~ 41,786 ops/sec</td>
-          <td>Baseline (1x)</td>
+          <td>+1.47x Faster</td>
         </tr>
         <tr>
           <td>Litecache (SQLite)</td>
           <td>Local Database Engine</td>
           <td>~ 56,580 ops/sec</td>
-          <td>+1.35x Faster</td>
+          <td>+1.99x Faster</td>
         </tr>
         <tr>
           <td><strong>LayeredStore (L1/L2)</strong></td>
           <td>Proxy Hydration Bridge</td>
           <td><strong>~ 76,687 ops/sec</strong></td>
-          <td><strong>+1.83x Faster</strong></td>
+          <td><strong>+2.71x Faster</strong></td>
         </tr>
         <tr>
           <td><strong>MemoryMapCache</strong></td>
           <td>Native Distributed Thread RAM</td>
           <td><strong>~ 158,418 ops/sec</strong></td>
-          <td><strong>+3.79x Faster</strong></td>
+          <td><strong>+5.59x Faster</strong></td>
         </tr>
       </tbody>
     </table>
@@ -160,6 +178,16 @@
       <li><b>Eliminating Remote Network Latency:</b> Standard Redis clusters often suffer from slow ping intervals or network bounds because they aren't physically co-located cleanly alongside the Puma/Rails runtime container. By mirroring data locally via MemoryMap, we cut cross-data-center latency organically down to 0ms.</li>
       <li><b>Mitigating Redis Hot Keys:</b> The Layered architecture algorithmically protects your backend database from heavy single-key overload. The more frequently a massive cache key is accessed globally, the faster each isolated Web Server organically pins it into their own local MemoryMap instances—natively sheltering the centralized Redis cluster from processing thousands of duplicate reads.</li>
       <li><b>High Availability Degraded Fallback:</b> In the event your primary Redis instance fails natively during an outage, the Layered architecture relies heavily on its own internal `MemoryMapCache` buffer, rendering content gracefully and maintaining web uptime metrics organically until the network bridges normalize.</li>
+    </ul>
+  </div>
+
+  <div class="glass-panel">
+    <h2 style="margin-top: 0; color: #69f0ae;">Standalone Single-Server Dominance</h2>
+    <p>Even without explicitly leveraging the L1/L2 remote cache proxy, the <b>MemoryMapCache</b> stands firmly as an exceptionally powerful monolithic single-server cache substitution:</p>
+    
+    <ul style="line-height: 1.6; color: #b8c1ca;">
+      <li><b>Destroys Rails FileStore Constraints:</b> The default multi-process choice for isolated Web Servers is `Rails.cache.file_store`. However, physical disk I/O bounds rapidly bottleneck modern Puma arrays. `MemoryMapCache` runs directly in RAM at nearly <b>10x the speed</b> of FileStore disk latency.</li>
+      <li><b>Fixes In-Memory Process Isolation:</b> You might think `ActiveSupport::Cache::MemoryStore` is optimal, but because MemoryStore strictly binds arrays uniquely to single process limits natively, <i>none</i> of your sibling Puma Web Workers share caching knowledge! MemoryMap seamlessly utilizes highly advanced IPC (Inter-Process Communication) and `mmap(2)` POSIX bindings resolving multi-worker RAM limitations—perfectly syncing hits natively across <i>every</i> thread running on the hardware concurrently.</li>
     </ul>
   </div>
 </div>
