@@ -46,3 +46,6 @@ gem "redis", "~> 5.4"
 gem "memory_map_cache", "~> 0.1.0", path: ".."
 
 gem "redcarpet", "~> 3.6"
+
+gem "litestack", "~> 0.4.4"
+gem "benchmark", "~> 0.5.0"
