@@ -4,6 +4,7 @@ class WelcomeController < ApplicationController
   end
 
   def benchmark
+    require "open3"
     @system_info = `uname -a`.strip
     @ruby_info = RUBY_DESCRIPTION
 
@@ -11,7 +12,13 @@ class WelcomeController < ApplicationController
     parser_path = Rails.root.join("..", "bench", "parse_markdown.rb")
 
     @benchmark_script_url = "https://github.com/danmayer/memory-map-cache/blob/main/bench/bench_cache_multiprocess.rb"
-    @markdown_output = `bundle exec ruby #{script_path} | ruby #{parser_path}`
+    
+    envs = {}
+    if Rails.env.test?
+      envs = { "PROCESSES" => "1", "ITERATIONS" => "1", "PAYLOADS" => "100" }
+    end
+
+    @markdown_output, _status = Open3.capture2(envs, "bundle exec ruby #{script_path} | ruby #{parser_path}")
   end
 
   def simulate

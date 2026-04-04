@@ -30,12 +30,13 @@ redis = ActiveSupport::Cache.lookup_store(:redis_cache_store, url: "redis://loca
 layeredcache = ActiveSupport::Cache::LayeredStore.new(mmapcache, memcache, l1_expires_in: 5.minutes)
 
 PROCESS_COUNT = (ENV['PROCESSES'] || 5).to_i
-ITERATIONS = 1000
+ITERATIONS = (ENV['ITERATIONS'] || 1000).to_i
+PAYLOADS = ENV['PAYLOADS'] ? ENV['PAYLOADS'].split(',').map(&:to_i) : [100, 1000, 4000]
 
 values = []
 keys = []
 
-[100, 1000, 4000].each do |size|
+PAYLOADS.each do |size|
   ITERATIONS.times do
     keys << (0...10).map { ('a'..'z').to_a[rand(26)] }.join
     values << (0...size).map { ('a'..'z').to_a[rand(26)] }.join
