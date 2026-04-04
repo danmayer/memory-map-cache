@@ -14,15 +14,6 @@
     <%= link_to "Launch Interactive Playground →", simulate_path, class: "btn active" %>
   </div>
 
-  <div class="glass-panel" style="display: flex; align-items: center; justify-content: space-between;">
-    <div>
-      <h2 style="margin-top: 0; margin-bottom: 0.5rem;">Live Container Benchmark</h2>
-      <p style="margin: 0; color: #a0aab2; max-width: 600px;">
-        Force this specific server's physical architecture to execute the raw Cache array benchmark metrics globally mapped above directly against its own CPU.
-      </p>
-    </div>
-    <%= link_to "Run Live Hardware Benchmarks →", benchmark_path, class: "btn" %>
-  </div>
 
   <div class="glass-panel">
     <h2 style="margin-top: 0;">Installation</h2>
@@ -35,6 +26,16 @@
     <div style="background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; font-family: monospace;">
       config.cache_store = :memory_map_cache_store, '/tmp/cache.bin'
     </div>
+  </div>
+
+  <div class="glass-panel" style="display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <h2 style="margin-top: 0; margin-bottom: 0.5rem;">Live Container Benchmark</h2>
+      <p style="margin: 0; color: #a0aab2; max-width: 600px;">
+        Force this specific server's physical architecture to execute the raw Cache array benchmark metrics globally mapped above directly against its own CPU.
+      </p>
+    </div>
+    <%= link_to "Run Live Hardware Benchmarks →", benchmark_path, class: "btn" %>
   </div>
 
   <div class="glass-panel">
