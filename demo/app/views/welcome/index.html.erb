@@ -31,6 +31,7 @@
     <h2 style="margin-top: 0;">Natively Fast. Easily Integratable.</h2>
     <p>We built this cache layer targeting aggressive optimization. The MemoryMapCache natively utilizes C-level `mmap` rendering out thousands of concurrent local Ruby hits in less than 32ms.</p>
     
+    <h3 style="margin-top: 2rem; color: #69f0ae;">Concurrent Read Workload (4KB Payloads)</h3>
     <table>
       <thead>
         <tr>
@@ -71,6 +72,9 @@
           <td><strong>~ 148,805 ops/sec</strong></td>
           <td><strong>+8.24x Faster</strong></td>
         </tr>
+      </tbody>
+    </table>
+
     <h3 style="margin-top: 2rem; color: #ff8a00;">Concurrent Write Workload (4KB Payloads)</h3>
     <table>
       <thead>
