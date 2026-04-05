@@ -2,6 +2,12 @@
 
 MemoryMapCache is a C-extension-backed `ActiveSupport::Cache::Store` that leverages native POSIX memory mapping (`mmap(2)`) to provide blazing-fast, cross-process shared memory caching. By bypassing TCP sockets and local database locks, it acts as a highly optimized IPC caching layer for multi-process Ruby applications.
 
+## 🚀 Live Demo & Sandbox
+
+Want to see it in action before installing? We've successfully deployed a fully interactive **[Streaming Sandbox & Benchmark Dashboard](https://memory-map-cache.onrender.com/)**. 
+
+You can use the native demonstration site to actively simulate massive cache hit/miss latency graphs across different network architectures, or forcefully execute the raw multiprocess Torture Suite dynamically against the live cloud container!
+
 ## Installation
 
 Add this line to your application's Gemfile:
