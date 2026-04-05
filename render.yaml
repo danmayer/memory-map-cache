@@ -8,6 +8,8 @@ services:
     envVars:
       - key: RAILS_MASTER_KEY
         generateValue: true
+      - key: SECRET_KEY_BASE
+        generateValue: true
       - key: REDIS_URL
         fromService:
           type: redis

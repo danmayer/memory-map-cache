@@ -58,4 +58,10 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Because this is a stateless Demo dashboard inherently without user accounts, 
+  # we aggressively structurally derive the secret key organically out of the raw Master Key
+  # or randomly to strictly fundamentally bypass strict `MissingKeyError` panics locally on Render.
+  require "securerandom"
+  config.secret_key_base = ENV["SECRET_KEY_BASE"] || ENV["RAILS_MASTER_KEY"] || SecureRandom.hex(64)
 end
