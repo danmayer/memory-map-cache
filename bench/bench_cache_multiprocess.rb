@@ -20,10 +20,12 @@ end
 # Clear old mmap file to ensure tests pick up the new dynamic configurations
 FileUtils.rm_f('/tmp/rails_mmap_cache_multi.bin')
 
-# RAMDISK /Volumes/RailsTestRAM
-cache = ActiveSupport::Cache.lookup_store(:litecache, { path: '/Volumes/RailsTestRAM/lite_cache_multi.db', sync: 0 })
-filestore = ActiveSupport::Cache.lookup_store(:file_store, '/Volumes/RailsTestRAM/rails_cache_multi/')
-ramfilestore = ActiveSupport::Cache.lookup_store(:ram_file_store, '/Volumes/RailsTestRAM/ram_cache_multi')
+# RAMDISK /Volumes/RailsTestRAM or Generic Fallback
+base_path = File.directory?('/Volumes/RailsTestRAM') ? '/Volumes/RailsTestRAM' : File.expand_path('../demo/tmp', __dir__)
+
+cache = ActiveSupport::Cache.lookup_store(:litecache, { path: "#{base_path}/lite_cache_multi.db", sync: 0 })
+filestore = ActiveSupport::Cache.lookup_store(:file_store, "#{base_path}/rails_cache_multi/")
+ramfilestore = ActiveSupport::Cache.lookup_store(:ram_file_store, "#{base_path}/ram_cache_multi")
 mmapcache = ActiveSupport::Cache.lookup_store(:memory_map_cache_store, '/tmp/rails_mmap_cache_multi.bin',
                                               compress: false, slot_size: 8192, max_slots: 10_000, serializer: :message_pack)
 memcache = ActiveSupport::Cache.lookup_store(:mem_cache_store, ["localhost:11211"])
