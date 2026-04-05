@@ -2,6 +2,7 @@ services:
   - type: web
     name: memory-map-cache-demo
     env: ruby
+    rootDir: demo
     buildCommand: "chmod +x ./bin/render-build.sh && ./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
     envVars:
