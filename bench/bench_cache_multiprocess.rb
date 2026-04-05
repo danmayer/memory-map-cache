@@ -27,8 +27,20 @@ ramfilestore = ActiveSupport::Cache.lookup_store(:ram_file_store, '/Volumes/Rail
 mmapcache = ActiveSupport::Cache.lookup_store(:memory_map_cache_store, '/tmp/rails_mmap_cache_multi.bin',
                                               compress: false, slot_size: 8192, max_slots: 10_000, serializer: :message_pack)
 memcache = ActiveSupport::Cache.lookup_store(:mem_cache_store, ["localhost:11211"])
-redis = ActiveSupport::Cache.lookup_store(:redis_cache_store, url: "redis://localhost:6379/0")
-layeredcache = ActiveSupport::Cache::LayeredStore.new(mmapcache, memcache, l1_expires_in: 5.minutes)
+redis = ActiveSupport::Cache.lookup_store(:redis_cache_store, url: ENV.fetch('REDIS_URL', "redis://localhost:6379/0"))
+
+# Dynamically ping servers natively rejecting timeout loops on isolated generic containers structurally
+def server_reachable?(store)
+  store.write("ping", "pong", raw: true)
+  true
+rescue StandardError
+  false
+end
+
+has_memcache = server_reachable?(memcache)
+has_redis = server_reachable?(redis)
+
+layeredcache = ActiveSupport::Cache::LayeredStore.new(mmapcache, (has_memcache ? memcache : mmapcache), l1_expires_in: 5.minutes)
 
 PROCESS_COUNT = (ENV['PROCESSES'] || 5).to_i
 ITERATIONS = (ENV['ITERATIONS'] || 1000).to_i
@@ -153,7 +165,7 @@ PAYLOADS.each do |size|
   bench_multiprocess("Memcached writes", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
     idx = ((p_idx * ITERATIONS) + i) % keys.length
     memcache.write(keys[idx], values[idx])
-  end
+  end if has_memcache
 
   puts "== Concurrent Reads =="
   # Let's make sure the keys exist first
@@ -163,7 +175,7 @@ PAYLOADS.each do |size|
     ramfilestore.write(keys[i], values[i])
     mmapcache.write(keys[i], values[i])
     layeredcache.write(keys[i], values[i])
-    memcache.write(keys[i], values[i])
+    memcache.write(keys[i], values[i]) if has_memcache
   end
 
   random_keys = keys.shuffle
@@ -190,7 +202,7 @@ PAYLOADS.each do |size|
 
   bench_multiprocess("Memcached reads", PROCESS_COUNT, ITERATIONS) do |_p_idx, i|
     memcache.read(random_keys[i])
-  end
+  end if has_memcache
 
   puts "== Mixed Workload (80% read, 20% write) =="
   bench_multiprocess("litecache mixed", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
@@ -245,20 +257,20 @@ PAYLOADS.each do |size|
     else
       memcache.write(keys[idx], values[idx])
     end
-  end
+  end if has_memcache
 
   # Test via benchmark.bm for mixed blocks
   bench_mixed_multiprocess("FileStore", filestore, ITERATIONS, PROCESS_COUNT)
   bench_mixed_multiprocess("RamFileStore", ramfilestore, ITERATIONS, PROCESS_COUNT)
   bench_mixed_multiprocess("MemoryMapCache", mmapcache, ITERATIONS, PROCESS_COUNT)
   bench_mixed_multiprocess("LayeredStore", layeredcache, ITERATIONS, PROCESS_COUNT)
-  bench_mixed_multiprocess("Memcached", memcache, ITERATIONS, PROCESS_COUNT)
+  bench_mixed_multiprocess("Memcached", memcache, ITERATIONS, PROCESS_COUNT) if has_memcache
 
   puts "=========================================================="
   puts "Comparing Pipeline Architectures natively (MGET/MSET)"
   puts "=========================================================="
   multi_iterations = 500
-  bench_multi_multiprocess("Redis", redis, multi_iterations, PROCESS_COUNT, 20)
+  bench_multi_multiprocess("Redis", redis, multi_iterations, PROCESS_COUNT, 20) if has_redis
   bench_multi_multiprocess("MemoryMapCache", mmapcache, multi_iterations, PROCESS_COUNT, 20)
 
   puts "==========================================================\n\n"
@@ -271,4 +283,4 @@ cache.clear
 filestore.clear
 ramfilestore.clear
 mmapcache.clear
-memcache.clear
+memcache.clear if has_memcache
