@@ -22,6 +22,8 @@ FileUtils.rm_f('/tmp/rails_mmap_cache_multi.bin')
 
 # RAMDISK /Volumes/RailsTestRAM or Generic Fallback
 base_path = File.directory?('/Volumes/RailsTestRAM') ? '/Volumes/RailsTestRAM' : File.expand_path('../demo/tmp', __dir__)
+require 'fileutils'
+FileUtils.mkdir_p(base_path)
 
 cache = ActiveSupport::Cache.lookup_store(:litecache, { path: "#{base_path}/lite_cache_multi.db", sync: 0 })
 filestore = ActiveSupport::Cache.lookup_store(:file_store, "#{base_path}/rails_cache_multi/")
@@ -164,10 +166,12 @@ PAYLOADS.each do |size|
     layeredcache.write(keys[idx], values[idx])
   end
 
-  bench_multiprocess("Memcached writes", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
-    idx = ((p_idx * ITERATIONS) + i) % keys.length
-    memcache.write(keys[idx], values[idx])
-  end if has_memcache
+  if has_memcache
+    bench_multiprocess("Memcached writes", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
+      idx = ((p_idx * ITERATIONS) + i) % keys.length
+      memcache.write(keys[idx], values[idx])
+    end
+  end
 
   puts "== Concurrent Reads =="
   # Let's make sure the keys exist first
@@ -202,9 +206,11 @@ PAYLOADS.each do |size|
     layeredcache.read(random_keys[i])
   end
 
-  bench_multiprocess("Memcached reads", PROCESS_COUNT, ITERATIONS) do |_p_idx, i|
-    memcache.read(random_keys[i])
-  end if has_memcache
+  if has_memcache
+    bench_multiprocess("Memcached reads", PROCESS_COUNT, ITERATIONS) do |_p_idx, i|
+      memcache.read(random_keys[i])
+    end
+  end
 
   puts "== Mixed Workload (80% read, 20% write) =="
   bench_multiprocess("litecache mixed", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
@@ -252,14 +258,16 @@ PAYLOADS.each do |size|
     end
   end
 
-  bench_multiprocess("Memcached mixed", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
-    idx = ((p_idx * ITERATIONS) + i) % keys.length
-    if rand < 0.8
-      memcache.read(keys[idx])
-    else
-      memcache.write(keys[idx], values[idx])
+  if has_memcache
+    bench_multiprocess("Memcached mixed", PROCESS_COUNT, ITERATIONS) do |p_idx, i|
+      idx = ((p_idx * ITERATIONS) + i) % keys.length
+      if rand < 0.8
+        memcache.read(keys[idx])
+      else
+        memcache.write(keys[idx], values[idx])
+      end
     end
-  end if has_memcache
+  end
 
   # Test via benchmark.bm for mixed blocks
   bench_mixed_multiprocess("FileStore", filestore, ITERATIONS, PROCESS_COUNT)
