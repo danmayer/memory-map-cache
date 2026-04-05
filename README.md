@@ -6,7 +6,7 @@ MemoryMapCache is a C-extension-backed `ActiveSupport::Cache::Store` that levera
 
 Want to see it in action before installing? We've successfully deployed a fully interactive **[Streaming Sandbox & Benchmark Dashboard](https://memory-map-cache.onrender.com/)**. 
 
-You can use the native demonstration site to actively simulate massive cache hit/miss latency graphs across different network architectures, or forcefully execute the raw multiprocess Torture Suite dynamically against the live cloud container!
+You can use the native demonstration site to actively simulate massive cache hit/miss latency graphs across different network architectures, or forcefully execute the raw multiprocess Performance Suite dynamically against the live cloud container!
 
 ## Installation
 

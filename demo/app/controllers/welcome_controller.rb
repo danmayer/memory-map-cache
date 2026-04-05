@@ -14,7 +14,7 @@ class WelcomeController < ApplicationController
   def benchmark_start
     file_path = Rails.root.join("tmp", "live_benchmark.md")
     FileUtils.mkdir_p(File.dirname(file_path))
-    File.write(file_path, "> Initializing physical torture test array...\n\n")
+    File.write(file_path, "> Initializing physical performance benchmark array...\n\n")
 
     envs = Rails.env.test? ? { "PROCESSES" => "1", "ITERATIONS" => "1", "PAYLOADS" => "100" } : {}
 
